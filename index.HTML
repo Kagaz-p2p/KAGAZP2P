@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>KAGAZ</title>
+<style>
+:root{--bg:#f4f6fa;--surface:#ffffff;--surface2:#eef1f6;--line:#dce2ec;--tx:#101828;--mut:#586579;--acc:#2457d6;--acc-h:#1c47b3;--acc-tx:#ffffff;--acc-soft:#e6edfc;--ok:#157f3b;--bad:#b42318;--warn:#a85a05;--shadow:0 1px 2px rgba(16,24,40,.06),0 8px 24px rgba(16,24,40,.06);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0b0f16;--surface:#131923;--surface2:#1a2230;--line:#273044;--tx:#e8edf5;--mut:#93a0b4;--acc:#6f9cff;--acc-h:#8fb2ff;--acc-tx:#0a1220;--acc-soft:#1b2a4a;--ok:#4ade80;--bad:#f87171;--warn:#fbbf24;--shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0b0f16;--surface:#131923;--surface2:#1a2230;--line:#273044;--tx:#e8edf5;--mut:#93a0b4;--acc:#6f9cff;--acc-h:#8fb2ff;--acc-tx:#0a1220;--acc-soft:#1b2a4a;--ok:#4ade80;--bad:#f87171;--warn:#fbbf24;--shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;min-height:100vh;padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.wrap{max-width:1040px;margin:0 auto;padding:0 max(16px,env(safe-area-inset-right,0px)) 48px max(16px,env(safe-area-inset-left,0px))}
+.ic{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;flex:none}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:20px 0}
+.brand{display:flex;align-items:center;gap:12px;min-width:0}
+.mark{width:38px;height:38px;border-radius:10px;background:var(--acc);color:var(--acc-tx);display:grid;place-items:center;flex:none}
+.mark svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linejoin:round;stroke-linecap:round}
+.brand h1{margin:0;font-size:19px;letter-spacing:.14em;line-height:1.1}
+.brand .sub{color:var(--mut);font-size:12.5px}
+.hr{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.pill{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:99px;border:1px solid var(--line);background:var(--surface);font-weight:600;font-size:13px;max-width:100%}
+.pill i{width:8px;height:8px;border-radius:50%;background:var(--mut);flex:none}
+.pill.connecting i{background:var(--warn);animation:pl 1.1s infinite}.pill.connected i{background:var(--ok)}.pill.failed i{background:var(--bad)}
+@keyframes pl{50%{opacity:.3}}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--acc);background:var(--acc);color:var(--acc-tx);border-radius:9px;padding:9px 16px;font:600 14px system-ui,sans-serif;cursor:pointer;transition:background .15s,border-color .15s,transform .1s;margin:0}
+.btn:hover{background:var(--acc-h);border-color:var(--acc-h)}.btn:active{transform:translateY(1px)}
+.btn.sec{background:var(--surface);color:var(--tx);border-color:var(--line)}.btn.sec:hover{background:var(--surface2);border-color:var(--mut)}
+.btn.sm{padding:5px 10px;font-size:12.5px;border-radius:8px}
+.btn.ok{background:var(--ok);border-color:var(--ok);color:#fff}
+.btn:disabled{opacity:.45;pointer-events:none}
+.btn:focus-visible,.choice:focus-visible,.drop:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px;box-shadow:var(--shadow);margin-bottom:16px;min-width:0}
+.card-h{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+h2{margin:0;font-size:17px;line-height:1.3}
+h3{margin:0 0 4px;font-size:15px}
+p{margin:0 0 12px;color:var(--mut)}
+.view{display:none}.view.on{display:block}
+.choices{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:6px}
+.choice{display:flex;gap:14px;align-items:flex-start;text-align:left;padding:20px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--tx);font:inherit;cursor:pointer;transition:border-color .15s,background .15s}
+.choice:hover{border-color:var(--acc);background:var(--acc-soft)}
+.choice .ci{width:42px;height:42px;border-radius:10px;background:var(--acc-soft);color:var(--acc);display:grid;place-items:center;flex:none}
+.choice .ci .ic{width:20px;height:20px}
+.choice b{display:block;font-size:16px}.choice small{color:var(--mut);font-size:13px}
+.how{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:4px}
+.how div{padding:14px;border:1px solid var(--line);border-radius:10px;background:var(--surface2)}
+.how b{display:block;font-size:13.5px;margin-bottom:2px}.how span{color:var(--mut);font-size:13px}
+.steps{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap}
+.step{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--mut);font-weight:600}
+.step b{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--line);display:grid;place-items:center;font-size:11.5px;background:var(--surface)}
+.step.d{color:var(--tx)}.step.d b{background:var(--acc);border-color:var(--acc);color:var(--acc-tx)}
+.step+.step::before{content:"";width:22px;height:1.5px;background:var(--line);margin-right:2px}
+.lbl{font-weight:650;font-size:14px;margin:16px 0 6px}
+.lbl:first-of-type{margin-top:0}
+textarea,input[type=text],select{width:100%;background:var(--surface2);color:var(--tx);border:1px solid var(--line);border-radius:9px;padding:10px 12px;font:12px/1.4 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;resize:none;height:88px;transition:border-color .15s}
+input[type=text],select{height:auto;font:14px system-ui,sans-serif}
+textarea:focus,input:focus,select:focus{border-color:var(--acc)}
+input:disabled{opacity:.55;cursor:not-allowed}
+.note{font-size:12.5px;color:var(--mut);margin-top:12px}
+.note.w{color:var(--warn)}
+.grid2{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:16px;align-items:start}
+.stats{display:flex;gap:14px;font-size:12.5px;color:var(--mut)}.stats b{color:var(--tx);font-variant-numeric:tabular-nums}
+.drop{border:1.5px dashed var(--line);border-radius:12px;padding:26px 14px;text-align:center;color:var(--mut);cursor:pointer;transition:border-color .15s,background .15s}
+.drop:hover,.drop.over{border-color:var(--acc);background:var(--acc-soft);color:var(--tx)}
+.drop .ic{width:26px;height:26px;color:var(--acc);display:block;margin:0 auto 6px}
+.drop b{color:var(--tx)}
+.q{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--line);border-radius:9px;margin-top:8px;font-size:13.5px;background:var(--surface2)}
+.q .n{display:flex;align-items:center;gap:8px;min-width:0}.q .n span{word-break:break-all}
+.q small{color:var(--mut);white-space:nowrap;font-variant-numeric:tabular-nums}
+.q button{background:none;border:0;color:var(--mut);cursor:pointer;padding:4px;border-radius:6px;display:grid}.q button:hover{color:var(--bad)}
+.q .r{display:flex;align-items:center;gap:8px;flex:none}
+.tl{margin-top:14px}
+.tr{padding:12px 0;border-top:1px solid var(--line)}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:13px;color:var(--mut);flex-wrap:wrap;margin:4px 0}
+.row b{color:var(--tx);word-break:break-all;display:flex;align-items:center;gap:8px;font-weight:600}
+.tag{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:2px 7px;border-radius:6px;background:var(--acc-soft);color:var(--acc)}
+.tag.in{background:var(--surface2);color:var(--mut)}
+progress{width:100%;height:6px;border-radius:9px;appearance:none;-webkit-appearance:none;background:var(--surface2);border:0;overflow:hidden;display:block}
+progress::-webkit-progress-bar{background:var(--surface2)}progress::-webkit-progress-value{background:var(--acc);transition:width .2s}progress::-moz-progress-bar{background:var(--acc)}
+a.dl{color:var(--acc);font-weight:700;text-decoration:none}a.dl:hover{text-decoration:underline}
+.chat{display:flex;flex-direction:column}
+.msgs{height:340px;overflow:auto;background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.m{max-width:82%;padding:8px 12px;border-radius:12px;font-size:14px;word-break:break-word;line-height:1.45}
+.m time{display:block;font-size:10.5px;opacity:.7;margin-top:2px;font-variant-numeric:tabular-nums}
+.m.me{align-self:flex-end;background:var(--acc);color:var(--acc-tx);border-bottom-right-radius:4px}
+.m.pe{align-self:flex-start;background:var(--surface);border:1px solid var(--line);border-bottom-left-radius:4px}
+.m.sys{align-self:center;background:none;color:var(--mut);font-size:12px;padding:2px}
+.typing{height:22px;font-size:12.5px;color:var(--mut);padding:4px 2px 0;display:flex;align-items:center;gap:6px}
+.dots{display:inline-flex;gap:3px}.dots i{width:4px;height:4px;border-radius:50%;background:var(--mut);animation:tp 1.2s infinite}.dots i:nth-child(2){animation-delay:.15s}.dots i:nth-child(3){animation-delay:.3s}
+@keyframes tp{0%,60%,100%{opacity:.25}30%{opacity:1}}
+.composer{display:flex;gap:8px;margin-top:6px}
+.composer input{flex:1;min-width:0}
+details.logbox{margin-top:4px}
+details summary{cursor:pointer;font-weight:650;font-size:14px;list-style:none;display:flex;align-items:center;gap:8px}
+details summary::-webkit-details-marker{display:none}
+details summary::after{content:"+";margin-left:auto;color:var(--mut);font-size:18px}
+details[open] summary::after{content:"\2212"}
+.log{height:120px;overflow:auto;font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:var(--mut);background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:10px;margin-top:12px}
+ul.help{margin:12px 0 0;padding-left:18px;color:var(--mut);font-size:13px}
+label.sw{display:flex;gap:10px;align-items:flex-start;font-size:14px;margin-top:12px;cursor:pointer}
+label.sw input{margin-top:3px;accent-color:var(--acc)}
+label.sw small{display:block;color:var(--mut);font-size:12.5px}
+.fl{display:block;margin:16px 0 6px;font-size:13px;font-weight:650}
+#ovl{position:fixed;inset:0;z-index:90;background:rgba(8,12,20,.55);display:none;align-items:flex-start;justify-content:center;overflow:auto;padding:max(16px,env(safe-area-inset-top,0px)) 16px 16px}
+#ovl.on{display:flex}
+#panel{width:min(560px,100%);background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px;margin:auto 0;box-shadow:var(--shadow)}
+#panel textarea{height:72px}
+.sep{height:1px;background:var(--line);margin:16px 0 0}
+body.noanim *,body.noanim *::before,body.noanim *::after{animation:none!important;transition:none!important}
+@media(max-width:760px){.grid2{grid-template-columns:1fr}.how{grid-template-columns:1fr}.msgs{height:280px}}
+@media(max-width:560px){.choices{grid-template-columns:1fr}.card{padding:18px}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style></head><body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol id="i-up" viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></symbol>
+<symbol id="i-down" viewBox="0 0 24 24"><path d="M12 5v14M19 12l-7 7-7-7"/></symbol>
+<symbol id="i-file" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></symbol>
+<symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></symbol>
+<symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 6h8M18 6h2M4 12h2M12 12h8M4 18h10M20 18h0"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/></symbol>
+<symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></symbol>
+<symbol id="i-link" viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></symbol>
+<symbol id="i-paste" viewBox="0 0 24 24"><rect x="6" y="5" width="12" height="16" rx="2"/><path d="M9 5a3 3 0 0 1 6 0M9 12h6M9 16h4"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></symbol>
+<symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></symbol>
+<symbol id="i-power" viewBox="0 0 24 24"><path d="M12 3v9"/><path d="M6.4 6.4a8 8 0 1 0 11.2 0"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+<symbol id="i-plane" viewBox="0 0 24 24"><path d="M21 3L10 14"/><path d="M21 3l-7 18-4-7-7-4z"/></symbol>
+<symbol id="i-back" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></symbol>
+</defs></svg>
+
+<div id="ovl"><div id="panel" role="dialog" aria-modal="true" aria-label="Options">
+<div class="card-h"><h2>Options</h2><button class="btn sec sm" id="o-x" aria-label="Close"><svg class="ic"><use href="#i-x"/></svg></button></div>
+<p>Settings are saved in this browser. Network changes apply to the next connection you create.</p>
+<label class="fl" for="o-theme">Theme</label>
+<select id="o-theme"><option value="system">Match system</option><option value="light">Light</option><option value="dark">Dark</option></select>
+<label class="sw"><input type="checkbox" id="o-stun"><span>Use public STUN server<small>Needed when the two devices are on different networks.</small></span></label>
+<label class="fl" for="o-ice">Extra STUN / TURN servers</label>
+<textarea id="o-ice" spellcheck="false" placeholder="turn:turn.example.com:3478|username|password"></textarea>
+<div class="note" style="margin-top:6px">One per line: <span class="mono">stun:host:port</span> or <span class="mono">turn:host:port|user|password</span></div>
+<label class="fl" for="o-chunk">Chunk size</label>
+<select id="o-chunk"><option value="16384">16 KB (most compatible)</option><option value="32768">32 KB</option><option value="65536">64 KB (fastest, same browser on both sides)</option></select>
+<label class="sw"><input type="checkbox" id="o-verify"><span>Verify files with SHA-256<small>Files over 300 MB are not hashed.</small></span></label>
+<label class="sw"><input type="checkbox" id="o-auto"><span>Auto-download received files</span></label>
+<label class="sw"><input type="checkbox" id="o-sound"><span>Play a sound for new files and messages</span></label>
+<label class="sw"><input type="checkbox" id="o-anim"><span>Interface animations</span></label>
+<div class="sep"></div>
+<div class="actions"><button class="btn" id="o-close">Done</button><button class="btn sec" id="o-reset">Reset to defaults</button></div>
+</div></div>
+
+<div class="wrap">
+<header><div class="brand"><div class="mark"><svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg></div><div><h1>KAGAZ</h1><div class="sub">Peer-to-peer file transfer. No account, no upload.</div></div></div>
+<div class="hr"><div id="st" class="pill" role="status"><i></i><span id="stt">Not connected</span></div>
+<button class="btn sec sm" id="optBtn"><svg class="ic"><use href="#i-sliders"/></svg><span class="t">Options</span></button>
+<button class="btn sec sm" id="disc" hidden><svg class="ic"><use href="#i-power"/></svg><span class="t">Disconnect</span></button></div></header>
+
+<div class="view on" id="v-home"><div class="card"><div class="card-h"><h2>Start a transfer</h2></div><p>Open this page on both devices. One becomes the sender, the other the receiver.</p>
+<div class="choices"><button class="choice" id="rS"><span class="ci"><svg class="ic"><use href="#i-up"/></svg></span><span><b>Send files</b><small>Create an offer code for the receiver</small></span></button>
+<button class="choice" id="rR"><span class="ci"><svg class="ic"><use href="#i-down"/></svg></span><span><b>Receive files</b><small>Paste the offer code from the sender</small></span></button></div></div>
+<div class="card"><div class="card-h"><h2>How it works</h2></div><div class="how"><div><b>Exchange two codes</b><span>The sender creates an offer. The receiver replies with an answer.</span></div><div><b>Direct connection</b><span>Devices connect to each other with WebRTC. Files never touch a server.</span></div><div><b>Transfer and chat</b><span>Send files in both directions, verify them, and message each other.</span></div></div></div></div>
+
+<div class="view" id="v-send"><div class="card"><div class="card-h"><h2>Send files</h2></div>
+<div class="steps" id="sp1"><div class="step"><b>1</b>Create offer</div><div class="step"><b>2</b>Paste answer</div><div class="step"><b>3</b>Connected</div></div>
+<div class="lbl">1. Create the offer code and share it with the receiver</div>
+<div class="actions" style="margin-top:0"><button class="btn" id="mkOffer"><svg class="ic"><use href="#i-plus"/></svg><span class="t">Create offer</span></button></div>
+<textarea id="offer" readonly placeholder="Your offer code appears here" style="margin-top:10px"></textarea>
+<div class="actions"><button class="btn sec" data-copy="offer"><svg class="ic"><use href="#i-copy"/></svg><span class="t">Copy offer</span></button><button class="btn sec" id="shareBtn" disabled><svg class="ic"><use href="#i-link"/></svg><span class="t">Copy share link</span></button></div>
+<div class="lbl">2. Paste the receiver's answer code</div><textarea id="ansIn" placeholder="Paste answer code"></textarea>
+<div class="actions"><button class="btn sec" data-paste="ansIn"><svg class="ic"><use href="#i-paste"/></svg><span class="t">Paste</span></button><button class="btn" id="apAns"><svg class="ic"><use href="#i-link"/></svg><span class="t">Connect</span></button><button class="btn sec" data-back><svg class="ic"><use href="#i-back"/></svg><span class="t">Back</span></button></div>
+<p class="note">Same device? Open Receive in another tab and it connects on its own. The share link only works when this page is hosted online (https).</p></div></div>
+
+<div class="view" id="v-recv"><div class="card"><div class="card-h"><h2>Receive files</h2></div>
+<div class="steps" id="sp2"><div class="step"><b>1</b>Paste offer</div><div class="step"><b>2</b>Send answer</div><div class="step"><b>3</b>Connected</div></div>
+<div class="lbl">1. Paste the sender's offer code</div><textarea id="offIn" placeholder="Paste offer code"></textarea>
+<div class="actions"><button class="btn sec" data-paste="offIn"><svg class="ic"><use href="#i-paste"/></svg><span class="t">Paste</span></button><button class="btn" id="mkAns"><svg class="ic"><use href="#i-plus"/></svg><span class="t">Create answer</span></button></div>
+<div class="lbl">2. Send this answer code back to the sender</div><textarea id="answer" readonly placeholder="Your answer code appears here"></textarea>
+<div class="actions"><button class="btn sec" data-copy="answer"><svg class="ic"><use href="#i-copy"/></svg><span class="t">Copy answer</span></button><button class="btn sec" data-back><svg class="ic"><use href="#i-back"/></svg><span class="t">Back</span></button></div>
+<p class="note">Waiting for the sender. If the sender tab is on this device, it connects automatically.</p></div></div>
+
+<div class="view" id="v-xfer"><div class="grid2">
+<section class="card"><div class="card-h"><h2>Files</h2><div class="stats"><span>Sent <b id="stS">0 B</b></span><span>Received <b id="stR">0 B</b></span></div></div>
+<div class="drop" id="drop" tabindex="0" role="button" aria-label="Choose files to send"><svg class="ic"><use href="#i-upload"/></svg><b>Drop files here</b> or tap to browse<input type="file" id="files" multiple hidden></div>
+<div id="qList"></div>
+<div class="actions"><button class="btn" id="sendBtn" disabled><svg class="ic"><use href="#i-plane"/></svg><span class="t">Send queue</span></button><button class="btn sec" id="clrQ" disabled><span class="t">Clear queue</span></button><span id="sel" class="note" style="align-self:center;margin:0"></span></div>
+<div class="tl" id="trs"></div><div class="actions"><button class="btn sec sm" id="clrT" hidden>Clear finished</button></div></section>
+<section class="card chat"><div class="card-h"><h2>Messages</h2></div>
+<div class="msgs" id="msgs" aria-live="polite"></div>
+<div class="typing" id="typ" hidden><span>Peer is typing</span><span class="dots"><i></i><i></i><i></i></span></div>
+<form class="composer" id="cf" autocomplete="off"><input type="text" id="mi" placeholder="Connect to a peer to start chatting" maxlength="2000" disabled aria-label="Message"><button class="btn" id="ms" type="submit" disabled><svg class="ic"><use href="#i-plane"/></svg><span class="t">Send</span></button></form></section>
+</div></div>
+
+<div class="card"><details class="logbox"><summary>Connection log and help</summary>
+<div class="log" id="log"></div>
+<ul class="help"><li>If the connection fails, create fresh codes on both sides and keep STUN on in Options.</li><li>Strict networks may need a TURN server. Add one in Options.</li><li>Create the answer only after the full offer is pasted.</li><li>Received files stay in memory until you download them, so very large files need enough free RAM.</li></ul></details></div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+/* ---------- settings ---------- */
+const DEF={theme:'system',stun:true,ice:'',chunk:16384,verify:true,auto:false,sound:true,anim:true};
+const S={...DEF};
+try{Object.assign(S,JSON.parse(localStorage.getItem('kagaz.settings')||'{}'))}catch{}
+function saveS(){try{localStorage.setItem('kagaz.settings',JSON.stringify(S))}catch{}}
+const OPT=[['o-theme','theme'],['o-stun','stun'],['o-ice','ice'],['o-chunk','chunk'],['o-verify','verify'],['o-auto','auto'],['o-sound','sound'],['o-anim','anim']];
+function applyS(){document.body.classList.toggle('noanim',!S.anim);const r=document.documentElement;if(S.theme=='light'||S.theme=='dark')r.setAttribute('data-theme',S.theme);else r.removeAttribute('data-theme')}
+function fillOpt(){OPT.forEach(([id,k])=>{const e=$(id);if(e.type=='checkbox')e.checked=!!S[k];else e.value=S[k]})}
+OPT.forEach(([id,k])=>{$(id).addEventListener('change',()=>{const e=$(id);S[k]=e.type=='checkbox'?e.checked:k=='chunk'?+e.value:e.value;saveS();applyS()})});
+$('o-ice').addEventListener('input',()=>{S.ice=$('o-ice').value;saveS()});
+$('optBtn').onclick=()=>$('ovl').classList.add('on');
+const closeOpt=()=>$('ovl').classList.remove('on');
+$('o-close').onclick=closeOpt;$('o-x').onclick=closeOpt;
+$('ovl').addEventListener('click',e=>{if(e.target.id=='ovl')closeOpt()});
+document.addEventListener('keydown',e=>{if(e.key=='Escape')closeOpt()});
+$('o-reset').onclick=()=>{Object.assign(S,DEF);saveS();fillOpt();applyS()};
+fillOpt();applyS();
+
+/* ---------- state ---------- */
+let pc=null,dc=null,role=null,bc=null,waiting=false,busy=false,up=false,sentBytes=0,recvBytes=0;
+const Q=[],recv=new Map(),aborted=new Set();
+const HASH_MAX=300*1024*1024,HIGH=1048576;
+try{bc=new BroadcastChannel('kagaz-v1')}catch{}
+
+/* ---------- helpers ---------- */
+function log(m){const l=$('log'),d=document.createElement('div');d.textContent='['+new Date().toLocaleTimeString()+'] '+m;l.appendChild(d);l.scrollTop=1e9}
+function status(s,t){$('st').className='pill '+s;$('stt').textContent=t;log(t)}
+function show(v){document.querySelectorAll('.view').forEach(e=>e.classList.toggle('on',e.id=='v-'+v))}
+function prog(n,k){[...$('sp'+k).children].forEach((d,i)=>d.classList.toggle('d',i<n))}
+const fmt=b=>b<1024?b+' B':b<1048576?(b/1024).toFixed(1)+' KB':b<1073741824?(b/1048576).toFixed(1)+' MB':(b/1073741824).toFixed(2)+' GB';
+const hex=b=>[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('');
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const ic=n=>'<svg class="ic" aria-hidden="true"><use href="#i-'+n+'"/></svg>';
+const clock=()=>new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+function beep(){if(!S.sound)return;try{const a=new(window.AudioContext||window.webkitAudioContext)(),o=a.createOscillator(),g=a.createGain();o.frequency.value=880;g.gain.value=.05;o.connect(g);g.connect(a.destination);o.start();o.stop(a.currentTime+.12);setTimeout(()=>a.close(),400)}catch{}}
+function iceServers(){const a=[];if(S.stun)a.push({urls:['stun:stun.l.google.com:19302','stun:stun1.l.google.com:19302']});
+String(S.ice||'').split('\n').map(x=>x.trim()).filter(Boolean).forEach(l=>{const p=l.split('|'),o={urls:p[0].trim()};if(p[1])o.username=p[1].trim();if(p[2])o.credential=p[2].trim();a.push(o)});return a}
+function updStats(){$('stS').textContent=fmt(sentBytes);$('stR').textContent=fmt(recvBytes)}
+
+/* ---------- offer / answer codes ---------- */
+async function enc(o){const s=JSON.stringify(o);try{const b=new Uint8Array(await new Response(new Blob([s]).stream().pipeThrough(new CompressionStream('deflate'))).arrayBuffer());let r='';b.forEach(x=>r+=String.fromCharCode(x));return 'Z'+btoa(r)}catch{return 'J'+btoa(unescape(encodeURIComponent(s)))}}
+async function dec(c){c=String(c).replace(/\s+/g,'');if(c.length<2)throw new Error('empty');const d=c.slice(1);if(c[0]=='J')return JSON.parse(decodeURIComponent(escape(atob(d))));if(c[0]!='Z')throw new Error('bad code');const u=Uint8Array.from(atob(d),x=>x.charCodeAt(0));return JSON.parse(await new Response(new Blob([u]).stream().pipeThrough(new DecompressionStream('deflate'))).text())}
+
+/* ---------- UI plumbing ---------- */
+function flash(b,txt){const sp=b.querySelector('.t');if(!sp)return;const o=b.dataset.o||sp.textContent;b.dataset.o=o;sp.textContent=txt;b.classList.add('ok');setTimeout(()=>{sp.textContent=o;b.classList.remove('ok')},1500)}
+async function copyText(t){try{await navigator.clipboard.writeText(t)}catch{const x=document.createElement('textarea');x.value=t;document.body.appendChild(x);x.select();try{document.execCommand('copy')}catch{}x.remove()}}
+document.querySelectorAll('[data-copy]').forEach(b=>b.onclick=async()=>{const t=$(b.dataset.copy);if(!t.value)return;await copyText(t.value);flash(b,'Copied')});
+document.querySelectorAll('[data-paste]').forEach(b=>b.onclick=async()=>{try{$(b.dataset.paste).value=await navigator.clipboard.readText();flash(b,'Pasted')}catch{log('Clipboard read blocked, paste manually (Ctrl/Cmd+V)');$(b.dataset.paste).focus()}});
+$('shareBtn').onclick=async()=>{const c=$('offer').value;if(!c)return;await copyText(location.href.split('#')[0]+'#o='+encodeURIComponent(c));flash($('shareBtn'),'Link copied')};
+document.querySelectorAll('[data-back]').forEach(b=>b.onclick=()=>{reset();show('home')});
+$('disc').onclick=()=>{reset();show('home')};
+
+function closePc(){const p=pc,d=dc;pc=dc=null;up=false;try{if(d){d.onclose=null;d.onmessage=null;d.close()}}catch{}try{if(p){p.onconnectionstatechange=null;p.close()}}catch{}}
+function reset(){closePc();Q.length=0;recv.clear();aborted.clear();busy=false;role=null;waiting=false;sentBytes=recvBytes=0;
+['offer','ansIn','offIn','answer'].forEach(i=>$(i).value='');$('trs').innerHTML='';$('msgs').innerHTML='';$('files').value='';$('mi').value='';setTyping(false);
+renderQ();updStats();prog(0,1);prog(0,2);setReady(false);$('disc').hidden=true;$('shareBtn').disabled=true;$('clrT').hidden=true;status('','Not connected')}
+$('rS').onclick=()=>{role='s';show('send')};
+$('rR').onclick=()=>{role='r';waiting=true;show('recv')};
+
+/* ---------- WebRTC ---------- */
+function mk(){closePc();const p=pc=new RTCPeerConnection({iceServers:iceServers()});
+p.onconnectionstatechange=()=>{if(pc!==p)return;const s=p.connectionState;
+if(s=='connecting')status('connecting','Connecting…');else if(s=='connected')status('connected','Connected');
+else if(s=='failed')status('failed','Connection failed. Turn STUN on (or add TURN) and create new codes');
+else if(s=='disconnected')log('Peer disconnected? Waiting to see if it recovers…');
+else if(s=='closed'&&role)status('failed','Connection closed')};
+setTimeout(()=>{if(pc===p&&!['connected','new','closed'].includes(p.connectionState))status('failed','Timed out. Check the codes or network')},45000);return p}
+const iceDone=p=>new Promise(r=>{if(p.iceGatheringState=='complete')return r();const f=()=>{if(p.iceGatheringState=='complete'){p.removeEventListener('icegatheringstatechange',f);r()}};p.addEventListener('icegatheringstatechange',f);setTimeout(r,6000)});
+
+$('mkOffer').onclick=async()=>{const btn=$('mkOffer');btn.disabled=true;
+try{const p=mk();dc=p.createDataChannel('kagaz',{ordered:true});wire(dc);await p.setLocalDescription(await p.createOffer());status('connecting','Gathering network info…');await iceDone(p);
+const c=await enc(p.localDescription);$('offer').value=c;$('shareBtn').disabled=false;prog(1,1);status('connecting','Offer ready, share it with the receiver');bc&&bc.postMessage({t:'offer',c})}
+catch(e){status('failed','Could not create offer: '+e.message)}finally{btn.disabled=false}};
+
+async function takeOffer(c){const p=mk();p.ondatachannel=e=>{dc=e.channel;wire(dc)};await p.setRemoteDescription(await dec(c));await p.setLocalDescription(await p.createAnswer());await iceDone(p);
+const a=await enc(p.localDescription);$('answer').value=a;prog(2,2);status('connecting','Answer ready, send it to the sender');bc&&bc.postMessage({t:'answer',c:a})}
+$('mkAns').onclick=async()=>{const v=$('offIn').value;if(!v.trim())return status('failed','Paste the offer code first');waiting=false;$('mkAns').disabled=true;
+try{await takeOffer(v)}catch(e){status('failed','Invalid offer code');waiting=true}finally{$('mkAns').disabled=false}};
+$('apAns').onclick=async()=>{if(!pc)return status('failed','Create an offer first');
+try{await pc.setRemoteDescription(await dec($('ansIn').value));prog(2,1);log('Answer applied')}catch(e){status('failed','Invalid answer code, or it does not match this offer')}};
+if(bc)bc.onmessage=async e=>{const m=e.data||{};
+if(m.t=='offer'&&role=='r'&&waiting){waiting=false;$('offIn').value=m.c;log('Offer received (same device)');try{await takeOffer(m.c)}catch{waiting=true}}
+if(m.t=='answer'&&role=='s'&&pc&&!pc.remoteDescription){$('ansIn').value=m.c;try{await pc.setRemoteDescription(await dec(m.c));prog(2,1)}catch{}}};
+
+/* ---------- data channel ---------- */
+function setReady(v){window.rdy=v;$('sendBtn').disabled=!v||!Q.length||busy;$('clrQ').disabled=!Q.length||busy;
+$('mi').disabled=!v;$('ms').disabled=!v;$('mi').placeholder=v?'Type a message…':'Connect to a peer to start chatting'}
+function opened(){if(up)return;up=true;setReady(true);prog(3,1);prog(3,2);status('connected','Connected');$('disc').hidden=false;show('xfer');
+addMsg('Connected. You can chat and send files now.','sys');if(matchMedia('(pointer:fine)').matches)setTimeout(()=>$('mi').focus(),60)}
+function wire(c){c.binaryType='arraybuffer';c.bufferedAmountLowThreshold=262144;c.onopen=opened;if(c.readyState=='open')opened();
+c.onclose=()=>{if(dc!==c)return;up=false;setReady(false);setTyping(false);status('failed','Peer disconnected');addMsg('Peer disconnected.','sys');recv.forEach(t=>{t.el.querySelector('.s').textContent='Interrupted';stripX(t.el)});recv.clear()};
+c.onerror=()=>log('Channel error');
+c.onmessage=async e=>{
+if(typeof e.data!='string'){const dv=new DataView(e.data),t=recv.get(dv.getUint32(0));if(t){const part=e.data.slice(4);t.parts.push(part);t.got+=part.byteLength;recvBytes+=part.byteLength;updStats();pg(t.el,t.got,t.size,t.t0)}return}
+let m;try{m=JSON.parse(e.data)}catch{return}
+if(m.t=='msg'){setTyping(false);addMsg(String(m.x||''),'pe');beep()}
+else if(m.t=='typing'){setTyping(!!m.on)}
+else if(m.t=='meta'){const el=card('in',String(m.name||'file'),+m.size||0,()=>{recv.delete(m.id);dc&&dc.readyState=='open'&&dc.send(JSON.stringify({t:'stop',id:m.id}));el.querySelector('.s').textContent='Cancelled'});recv.set(m.id,{id:m.id,name:String(m.name||'file'),size:+m.size||0,type:m.type,got:0,parts:[],t0:performance.now(),el})}
+else if(m.t=='end'){const t=recv.get(m.id);if(t)finish(t,m)}
+else if(m.t=='cancel'){const t=recv.get(m.id);if(t){recv.delete(m.id);t.el.querySelector('.s').textContent='Cancelled by sender';stripX(t.el)}}
+else if(m.t=='stop'){aborted.add(m.id)}}}
+
+async function finish(t,m){recv.delete(t.id);const bl=new Blob(t.parts,{type:t.type||'application/octet-stream'});let note='';
+if(bl.size!==t.size)note='Size mismatch';
+else if(m.hash&&S.verify){if(bl.size<=HASH_MAX){try{const h=hex(await crypto.subtle.digest('SHA-256',await bl.arrayBuffer()));note=h==m.hash?'Verified (SHA-256)':'Hash mismatch'}catch{note='Hash unavailable'}}else note='Too large to verify'}
+else note='Received';
+const s=t.el.querySelector('.s'),a=document.createElement('a'),url=URL.createObjectURL(bl);a.className='dl';a.href=url;a.download=t.name.replace(/[\\/:*?"<>|]/g,'_');a.textContent='Download';
+s.textContent=note+' · ';s.appendChild(a);t.el.querySelector('progress').value=100;t.el.querySelector('.o').textContent=fmt(t.size);stripX(t.el);$('clrT').hidden=false;beep();
+if(S.auto&&!/mismatch/i.test(note))a.click()}
+
+function stripX(el){const x=el.querySelector('.x');x&&x.remove()}
+function card(dir,name,size,onCancel){const d=document.createElement('div');d.className='tr';
+d.innerHTML='<div class="row"><b><span class="tag"></span><span class="nm"></span></b><span class="sz"></span></div><progress max="100" value="0"></progress><div class="row"><output class="o">0%</output><span class="s"></span></div>';
+const g=d.querySelector('.tag');g.textContent=dir=='out'?'Sending':'Receiving';if(dir=='in')g.classList.add('in');
+d.querySelector('.nm').textContent=name;d.querySelector('.sz').textContent=fmt(size);
+if(onCancel){const x=document.createElement('button');x.className='btn sec sm x';x.textContent='Cancel';x.onclick=()=>{onCancel();x.remove()};d.lastElementChild.appendChild(x)}
+$('trs').prepend(d);$('clrT').hidden=false;return d}
+function pg(el,done,total,t0){total=total||1;const p=done/total*100,sp=done/((performance.now()-t0)/1000||1),eta=(total-done)/(sp||1);el.querySelector('progress').value=p;el.querySelector('.o').textContent=`${p.toFixed(0)}% · ${fmt(sp)}/s · ETA ${isFinite(eta)?eta.toFixed(0):'?'}s`}
+$('clrT').onclick=()=>{[...$('trs').children].forEach(d=>{if(!d.querySelector('.x'))d.remove()});if(!$('trs').children.length)$('clrT').hidden=true};
+
+/* ---------- queue & sending ---------- */
+$('drop').onclick=()=>$('files').click();
+$('drop').onkeydown=e=>{if(e.key=='Enter'||e.key==' '){e.preventDefault();$('files').click()}};
+['dragover','dragleave','drop'].forEach(ev=>$('drop').addEventListener(ev,e=>{e.preventDefault();$('drop').classList.toggle('over',ev=='dragover');if(ev=='drop'&&e.dataTransfer.files.length)addFiles(e.dataTransfer.files)}));
+$('files').onchange=()=>{addFiles($('files').files);$('files').value=''};
+function addFiles(list){[...list].forEach(f=>{if(!Q.some(x=>x.name==f.name&&x.size==f.size&&x.lastModified==f.lastModified))Q.push(f)});renderQ()}
+function renderQ(){const l=$('qList');l.innerHTML='';Q.forEach((f,i)=>{const d=document.createElement('div');d.className='q';
+const n=document.createElement('div');n.className='n';n.innerHTML=ic('file');const nm=document.createElement('span');nm.textContent=f.name;n.appendChild(nm);
+const r=document.createElement('div');r.className='r';const s=document.createElement('small');s.textContent=fmt(f.size);
+const x=document.createElement('button');x.type='button';x.title='Remove';x.setAttribute('aria-label','Remove '+f.name);x.innerHTML=ic('x');x.onclick=()=>{if(busy)return;Q.splice(i,1);renderQ()};
+r.append(s,x);d.append(n,r);l.appendChild(d)});
+$('sel').textContent=Q.length?Q.length+' file(s) · '+fmt(Q.reduce((a,x)=>a+x.size,0)):'';setReady(!!window.rdy)}
+$('clrQ').onclick=()=>{Q.length=0;renderQ()};
+$('sendBtn').onclick=async()=>{if(busy||!dc)return;busy=true;setReady(true);
+while(Q.length&&dc&&dc.readyState=='open'){const f=Q[0];try{await sendFile(f)}catch(e){log('Send error: '+e.message);status('failed','Transfer interrupted. Reconnect');break}Q.shift();renderQ()}
+busy=false;renderQ()};
+async function sendFile(f){const id=(Math.random()*4294967295)>>>0;let hash='';
+const el=card('out',f.name,f.size,()=>aborted.add(id));
+if(S.verify&&f.size<=HASH_MAX){el.querySelector('.s').textContent='Hashing…';try{hash=hex(await crypto.subtle.digest('SHA-256',await f.arrayBuffer()))}catch{}el.querySelector('.s').textContent=''}
+dc.send(JSON.stringify({t:'meta',id,name:f.name,size:f.size,type:f.type}));
+const t0=performance.now(),max=(pc&&pc.sctp&&pc.sctp.maxMessageSize)||16384,CH=Math.max(1024,Math.min(S.chunk,max-4,262140));let off=0;
+while(off<f.size){
+if(aborted.has(id)){try{dc.send(JSON.stringify({t:'cancel',id}))}catch{}el.querySelector('.s').textContent='Cancelled';stripX(el);return}
+if(!dc||dc.readyState!='open')throw new Error('channel closed');
+while(dc.bufferedAmount>HIGH){await sleep(15);if(!dc||dc.readyState!='open')throw new Error('channel closed')}
+const body=await f.slice(off,off+CH).arrayBuffer(),fr=new Uint8Array(4+body.byteLength);new DataView(fr.buffer).setUint32(0,id);fr.set(new Uint8Array(body),4);
+dc.send(fr.buffer);off+=body.byteLength;sentBytes+=body.byteLength;updStats();pg(el,off,f.size,t0)}
+dc.send(JSON.stringify({t:'end',id,hash}));el.querySelector('progress').value=100;el.querySelector('.o').textContent=fmt(f.size);
+el.querySelector('.s').textContent='Sent'+(hash?' · SHA-256 shared':'');stripX(el)}
+
+/* ---------- chat ---------- */
+function addMsg(x,c){const m=$('msgs'),d=document.createElement('div');d.className='m '+c;d.appendChild(document.createTextNode(x));
+if(c!='sys'){const t=document.createElement('time');t.textContent=clock();d.appendChild(t)}m.appendChild(d);m.scrollTop=m.scrollHeight}
+let peerT=null,selfT=null,lastTyp=0;
+function setTyping(on){$('typ').hidden=!on;clearTimeout(peerT);if(on)peerT=setTimeout(()=>{$('typ').hidden=true},4000)}
+function sendRaw(o){try{if(dc&&dc.readyState=='open'){dc.send(JSON.stringify(o));return true}}catch{}return false}
+$('mi').addEventListener('input',()=>{const now=Date.now();if(now-lastTyp>2000){lastTyp=now;sendRaw({t:'typing',on:1})}
+clearTimeout(selfT);selfT=setTimeout(()=>{lastTyp=0;sendRaw({t:'typing',on:0})},2500)});
+$('cf').addEventListener('submit',e=>{e.preventDefault();const v=$('mi').value.trim();if(!v)return;
+clearTimeout(selfT);lastTyp=0;if(sendRaw({t:'msg',x:v})){addMsg(v,'me');$('mi').value=''}else log('Message not sent: not connected')});
+
+/* ---------- share link on load ---------- */
+(function(){try{const m=/^#o=(.+)$/.exec(location.hash);if(m){const c=decodeURIComponent(m[1]);role='r';show('recv');$('offIn').value=c;history.replaceState(null,'',location.pathname+location.search);setTimeout(()=>$('mkAns').click(),80)}}catch{}})();
+setReady(false);renderQ();updStats();
+</script></body></html>
