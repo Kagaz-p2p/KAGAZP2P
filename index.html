@@ -111,6 +111,8 @@ label.sw small{display:block;color:var(--mut);font-size:12.5px}
 .qrbox{display:flex;flex-direction:column;align-items:center;gap:8px;margin-top:12px;padding:14px;border:1px solid var(--line);border-radius:12px;background:var(--surface2)}
 .qrbox canvas{background:#fff;border-radius:8px;width:min(100%,420px);height:auto;aspect-ratio:1;image-rendering:pixelated}
 .qrbox .note{margin:0;text-align:center}
+.qrbox canvas{cursor:zoom-in}
+.qrbox canvas.big{position:fixed;inset:0;margin:auto;width:min(94vw,94vh);height:min(94vw,94vh);z-index:96;box-shadow:0 0 0 100vmax rgba(8,12,20,.85);cursor:zoom-out}
 #scn{position:fixed;inset:0;z-index:95;background:rgba(8,12,20,.72);display:none;align-items:center;justify-content:center;padding:16px}
 #scn.on{display:flex}
 #scp{width:min(480px,100%);background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;box-shadow:var(--shadow)}
@@ -143,6 +145,9 @@ body.noanim *,body.noanim *::before,body.noanim *::after{animation:none!importan
 <label class="fl" for="o-theme">Theme</label>
 <select id="o-theme"><option value="system">Match system</option><option value="light">Light</option><option value="dark">Dark</option></select>
 <label class="sw"><input type="checkbox" id="o-stun"><span>Use public STUN server<small>Needed when the two devices are on different networks.</small></span></label>
+<label class="fl" for="o-relay">Auto-connect relay</label>
+<input type="text" id="o-relay" placeholder="https://ntfy.sh" autocomplete="off" spellcheck="false">
+<div class="note" style="margin-top:6px">Lets the receiver connect after one scan. Only the small connection codes (which include IP addresses) pass through this relay, never your files or messages. Both devices must use the same relay. Clear this field to turn it off and pair with manual codes only.</div>
 <label class="fl" for="o-ice">Extra STUN / TURN servers</label>
 <textarea id="o-ice" spellcheck="false" placeholder="turn:turn.example.com:3478|username|password"></textarea>
 <div class="note" style="margin-top:6px">One per line: <span class="mono">stun:host:port</span> or <span class="mono">turn:host:port|user|password</span></div>
@@ -180,7 +185,7 @@ body.noanim *,body.noanim *::before,body.noanim *::after{animation:none!importan
 <div class="qrbox" id="qrO" hidden><canvas id="cvO" width="300" height="300" role="img" aria-label="QR code for the offer"></canvas><p class="note" id="qrOn"></p></div>
 <div class="lbl">2. Paste the receiver's answer code</div><textarea id="ansIn" placeholder="Paste answer code"></textarea>
 <div class="actions"><button class="btn sec" data-paste="ansIn"><svg class="ic"><use href="#i-paste"/></svg><span class="t">Paste</span></button><button class="btn sec" id="scanA"><svg class="ic"><use href="#i-cam"/></svg><span class="t">Scan answer</span></button><button class="btn" id="apAns"><svg class="ic"><use href="#i-link"/></svg><span class="t">Connect</span></button><button class="btn sec" data-back><svg class="ic"><use href="#i-back"/></svg><span class="t">Back</span></button></div>
-<p class="note">Same device? Open Receive in another tab and it connects on its own. The share link only works when this page is hosted online (https).</p></div></div>
+<p class="note">Same device? Open Receive in another tab and it connects on its own. The QR and share link only work when this page is hosted online (https). Tap the QR to enlarge it.</p></div></div>
  
 <div class="view" id="v-recv"><div class="card"><div class="card-h"><h2>Receive files</h2></div>
 <div class="steps" id="sp2"><div class="step"><b>1</b>Paste offer</div><div class="step"><b>2</b>Send answer</div><div class="step"><b>3</b>Connected</div></div>
@@ -188,7 +193,7 @@ body.noanim *,body.noanim *::before,body.noanim *::after{animation:none!importan
 <div class="actions"><button class="btn sec" data-paste="offIn"><svg class="ic"><use href="#i-paste"/></svg><span class="t">Paste</span></button><button class="btn sec" id="scanO"><svg class="ic"><use href="#i-cam"/></svg><span class="t">Scan offer</span></button><button class="btn" id="mkAns"><svg class="ic"><use href="#i-plus"/></svg><span class="t">Create answer</span></button></div>
 <div class="lbl">2. Send this answer code back to the sender</div><textarea id="answer" readonly placeholder="Your answer code appears here"></textarea>
 <div class="actions"><button class="btn sec" data-copy="answer"><svg class="ic"><use href="#i-copy"/></svg><span class="t">Copy answer</span></button><button class="btn sec" data-back><svg class="ic"><use href="#i-back"/></svg><span class="t">Back</span></button></div>
-<div class="qrbox" id="qrA" hidden><canvas id="cvA" width="300" height="300" role="img" aria-label="QR code for the answer"></canvas><p class="note">Hold this up to the sender and press Scan answer on their screen.</p></div>
+<div class="qrbox" id="qrA" hidden><canvas id="cvA" width="300" height="300" role="img" aria-label="QR code for the answer"></canvas><p class="note">Only needed if the sender did not connect by itself. Hold it up to the sender and press Scan answer on their screen.</p></div>
 <p class="note">Waiting for the sender. If the sender tab is on this device, it connects automatically.</p></div></div>
  
 <div class="view" id="v-xfer"><div class="grid2">
@@ -217,11 +222,11 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 <script>
 const $=id=>document.getElementById(id);
 /* ---------- settings ---------- */
-const DEF={theme:'system',stun:true,ice:'',chunk:16384,verify:true,auto:false,sound:true,anim:true};
+const DEF={theme:'system',relay:'https://ntfy.sh',stun:true,ice:'',chunk:16384,verify:true,auto:false,sound:true,anim:true};
 const S={...DEF};
 try{Object.assign(S,JSON.parse(localStorage.getItem('kagaz.settings')||'{}'))}catch{}
 function saveS(){try{localStorage.setItem('kagaz.settings',JSON.stringify(S))}catch{}}
-const OPT=[['o-theme','theme'],['o-stun','stun'],['o-ice','ice'],['o-chunk','chunk'],['o-verify','verify'],['o-auto','auto'],['o-sound','sound'],['o-anim','anim']];
+const OPT=[['o-theme','theme'],['o-relay','relay'],['o-stun','stun'],['o-ice','ice'],['o-chunk','chunk'],['o-verify','verify'],['o-auto','auto'],['o-sound','sound'],['o-anim','anim']];
 function applyS(){document.body.classList.toggle('noanim',!S.anim);const r=document.documentElement;if(S.theme=='light'||S.theme=='dark')r.setAttribute('data-theme',S.theme);else r.removeAttribute('data-theme')}
 function fillOpt(){OPT.forEach(([id,k])=>{const e=$(id);if(e.type=='checkbox')e.checked=!!S[k];else e.value=S[k]})}
 OPT.forEach(([id,k])=>{$(id).addEventListener('change',()=>{const e=$(id);S[k]=e.type=='checkbox'?e.checked:k=='chunk'?+e.value:e.value;saveS();applyS()})});
@@ -269,7 +274,7 @@ document.querySelectorAll('[data-back]').forEach(b=>b.onclick=()=>{reset();show(
 $('disc').onclick=()=>{reset();show('home')};
  
 function closePc(){const p=pc,d=dc;pc=dc=null;up=false;try{if(d){d.onclose=null;d.onmessage=null;d.close()}}catch{}try{if(p){p.onconnectionstatechange=null;p.close()}}catch{}}
-function reset(){closePc();Q.length=0;recv.clear();aborted.clear();busy=false;role=null;waiting=false;sentBytes=recvBytes=0;
+function reset(){closePc();closeRelay();Q.length=0;recv.clear();aborted.clear();busy=false;role=null;waiting=false;sentBytes=recvBytes=0;
 ['offer','ansIn','offIn','answer'].forEach(i=>$(i).value='');$('trs').innerHTML='';$('msgs').innerHTML='';$('files').value='';$('mi').value='';setTyping(false);
 renderQ();updStats();prog(0,1);prog(0,2);setReady(false);$('disc').hidden=true;$('shareBtn').disabled=true;$('qrO').hidden=true;$('qrA').hidden=true;$('clrT').hidden=true;status('','Not connected')}
 $('rS').onclick=()=>{role='s';show('send')};
@@ -382,28 +387,58 @@ const safe=c=>c[0]+c.slice(1).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$
 const unsafe=c=>{c=c[0]+c.slice(1).replace(/-/g,'+').replace(/_/g,'/');while((c.length-1)%4)c+='=';return c};
 function extractCode(t){t=String(t).trim();const m=/[#&?]o=([^&\s]+)/.exec(t);if(m){let c=m[1];try{c=decodeURIComponent(c)}catch{}return unsafe(c)}return t}
 function drawQR(cv,text){try{const q=qrcode(0,'L');q.addData(text);q.make();const n=q.getModuleCount(),m=4,cell=Math.max(3,Math.ceil(480/(n+2*m))),sz=(n+2*m)*cell;cv.width=cv.height=sz;const g=cv.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,sz,sz);g.fillStyle='#000';for(let r=0;r<n;r++)for(let c=0;c<n;c++)if(q.isDark(r,c))g.fillRect((c+m)*cell,(r+m)*cell,cell,cell);return true}catch(e){return false}}
-function showQrO(code){const hosted=/^https?:$/.test(location.protocol),txt=hosted?location.href.split('#')[0]+'#o='+safe(code):code,ok=drawQR($('cvO'),txt);
-$('cvO').hidden=!ok;$('qrO').hidden=false;
-$('qrOn').textContent=!ok?'This code is too large for a QR code. Use Copy offer or Copy share link instead.':hosted?'Scan with the receiver’s phone camera. It opens this page and fills in the offer.':'This copy is not hosted online, so the QR holds the raw code. On the receiver, press Scan offer.'}
+let relayES=null,offerSeq=0;
+const relayOn=()=>/^https?:\/\//i.test(String(S.relay||'').trim());
+const rurl=t=>String(S.relay).trim().replace(/\/+$/,'')+'/'+t;
+function closeRelay(){if(relayES){try{relayES.close()}catch{}relayES=null}}
+function newRoom(){const b=crypto.getRandomValues(new Uint8Array(12));let s='';b.forEach(x=>s+=String.fromCharCode(x));return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}
+async function showQrO(code){const seq=++offerSeq,hosted=/^https?:$/.test(location.protocol),base=location.href.split('#')[0];
+let txt=hosted?base+'#o='+safe(code):code,mode=hosted?'full':'raw';
+closeRelay();
+if(hosted&&relayOn()&&code.length<3500){const room=newRoom();
+try{const r=await fetch(rurl('kagaz-'+room+'-o'),{method:'POST',body:code});if(!r.ok)throw new Error('relay '+r.status);
+if(seq!==offerSeq)return;txt=base+'#r='+room;mode='relay';watchAnswer(room)}catch(e){log('Relay not available ('+(e&&e.message||e)+'). Using the full-code QR.')}}
+if(seq!==offerSeq)return;
+const ok=drawQR($('cvO'),txt);$('cvO').hidden=!ok;$('qrO').hidden=false;
+$('qrOn').textContent=!ok?'This code is too large for a QR code. Use Copy offer or Copy share link instead.':mode=='relay'?'Scan with the receiver’s phone camera. The receiver connects by itself, there is nothing to scan back. Tap the QR to enlarge it.':mode=='full'?'Scan with the receiver’s phone camera. It opens this page and fills in the offer. Then press Scan answer here. Tap the QR to enlarge it.':'This copy is not hosted online, so the QR holds the raw code. On the receiver, press Scan offer.'}
+function watchAnswer(room){closeRelay();let es;try{es=new EventSource(rurl('kagaz-'+room+'-a')+'/sse')}catch(e){return log('Relay listen failed')}relayES=es;
+es.onmessage=e=>{let j;try{j=JSON.parse(e.data)}catch{return}if(j&&j.event=='message'&&j.message){closeRelay();log('Answer received through the relay');$('ansIn').value=String(j.message).trim();prog(2,1);$('apAns').click()}};
+es.onerror=()=>log('Relay connection hiccup, retrying…')}
+async function fetchRelayOffer(room){for(let i=0;i<10;i++){try{const r=await fetch(rurl('kagaz-'+room+'-o')+'/json?poll=1&since=all');const t=await r.text();
+const m=t.split('\n').filter(Boolean).map(x=>{try{return JSON.parse(x)}catch{return null}}).filter(j=>j&&j.event=='message'&&j.message);if(m.length)return String(m[m.length-1].message).trim()}catch{}
+await sleep(1500)}throw new Error('the offer was not found')}
+async function joinRoom(room){closeRelay();role='r';waiting=false;show('recv');status('connecting','Fetching the offer…');
+if(!relayOn()){return status('failed','Auto-connect is turned off in Options. Use Scan offer or paste the full code.')}
+try{const c=await fetchRelayOffer(room);$('offIn').value=c;await takeOffer(c);
+try{const r=await fetch(rurl('kagaz-'+room+'-a'),{method:'POST',body:$('answer').value});if(!r.ok)throw new Error('relay '+r.status);log('Answer sent through the relay')}catch(e){log('Could not send the answer through the relay. Show the answer QR to the sender instead.')}}
+catch(e){status('failed','Could not get the offer ('+(e&&e.message||e)+'). Ask the sender for the full code instead.')}}
 function showQrA(code){const ok=drawQR($('cvA'),code);$('cvA').hidden=!ok;$('qrA').hidden=false;if(!ok)$('qrA').querySelector('.note').textContent='This code is too large for a QR code. Use Copy answer instead.'}
  
-let scanStream=null,scanRaf=0,scanCb=null;
+let scanStream=null,scanTimer=0,scanCb=null,bd=null;
+try{if('BarcodeDetector' in window)bd=new BarcodeDetector({formats:['qr_code']})}catch{}
 const sc=document.createElement('canvas'),sctx=sc.getContext('2d',{willReadFrequently:true});
 async function openScan(title,cb){$('scT').textContent=title;$('scM').textContent='Starting camera…';$('scn').classList.add('on');scanCb=cb;
 try{if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)throw new Error('camera is not available here. Open the site over https, or paste the code instead.');
-scanStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false});
-const v=$('vid');v.srcObject=scanStream;await v.play();$('scM').textContent='Point the camera at the QR code.';tick()}
+scanStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}},audio:false});
+const v=$('vid');v.srcObject=scanStream;await v.play();$('scM').textContent='Point the camera at the QR code and hold steady.';tick()}
 catch(e){$('scM').textContent='Could not open the camera: '+((e&&e.message)||e)}}
-function closeScan(){cancelAnimationFrame(scanRaf);if(scanStream){scanStream.getTracks().forEach(t=>t.stop());scanStream=null}const v=$('vid');v.srcObject=null;$('scn').classList.remove('on');scanCb=null}
-function tick(){const v=$('vid');if(!scanStream)return;
-if(v.readyState>=2&&v.videoWidth){const w=v.videoWidth,k=Math.min(1,960/w);sc.width=Math.round(w*k);sc.height=Math.round(v.videoHeight*k);sctx.drawImage(v,0,0,sc.width,sc.height);
-const d=sctx.getImageData(0,0,sc.width,sc.height),r=jsQR(d.data,d.width,d.height,{inversionAttempts:'dontInvert'});
-if(r&&r.data){const cb=scanCb;closeScan();cb&&cb(r.data);return}}
-scanRaf=requestAnimationFrame(tick)}
+function closeScan(){clearTimeout(scanTimer);if(scanStream){scanStream.getTracks().forEach(t=>t.stop());scanStream=null}const v=$('vid');v.srcObject=null;$('scn').classList.remove('on');scanCb=null}
+async function tick(){const v=$('vid');if(!scanStream)return;let txt=null;
+if(v.readyState>=2&&v.videoWidth){
+if(bd){try{const r=await bd.detect(v);if(r.length)txt=r[0].rawValue}catch{bd=null}}
+if(!txt&&!bd&&scanStream){const w=v.videoWidth,k=Math.min(1,1280/w);sc.width=Math.round(w*k);sc.height=Math.round(v.videoHeight*k);sctx.drawImage(v,0,0,sc.width,sc.height);
+const d=sctx.getImageData(0,0,sc.width,sc.height),r=jsQR(d.data,d.width,d.height,{inversionAttempts:'attemptBoth'});if(r&&r.data)txt=r.data}}
+if(!scanStream)return;
+if(txt){const cb=scanCb;closeScan();cb&&cb(txt);return}
+scanTimer=setTimeout(tick,110)}
 $('scX').onclick=closeScan;
 $('scn').addEventListener('click',e=>{if(e.target.id=='scn')closeScan()});
-$('scanO').onclick=()=>openScan('Scan the sender’s offer',t=>{$('offIn').value=extractCode(t);$('mkAns').click()});
+const parseRoom=t=>{const m=/[#&?]r=([\w-]{8,40})/.exec(String(t));return m?m[1]:null};
+$('scanO').onclick=()=>openScan('Scan the sender’s offer',t=>{const room=parseRoom(t);if(room)return joinRoom(room);$('offIn').value=extractCode(t);$('mkAns').click()});
 $('scanA').onclick=()=>openScan('Scan the receiver’s answer',t=>{$('ansIn').value=extractCode(t);$('apAns').click()});
+$('cvO').onclick=()=>$('cvO').classList.toggle('big');
+$('cvA').onclick=()=>$('cvA').classList.toggle('big');
+(function(){const m=/^#r=([\w-]{8,40})$/.exec(location.hash);if(m){history.replaceState(null,'',location.pathname+location.search);setTimeout(()=>joinRoom(m[1]),100)}})();
  
 /* ---------- share link on load ---------- */
 (function(){try{const m=/^#o=(.+)$/.exec(location.hash);if(m){let c=m[1];try{c=decodeURIComponent(c)}catch{}c=unsafe(c);role='r';show('recv');$('offIn').value=c;history.replaceState(null,'',location.pathname+location.search);setTimeout(()=>$('mkAns').click(),80)}}catch{}})();
